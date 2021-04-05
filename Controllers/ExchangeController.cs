@@ -116,18 +116,19 @@ namespace ExchangeRatesAPI.Controllers
             if (Base != "" && Base != null)
             {
                 decimal baseRate = 0;
-                for (int i = 0; i < dbList.Count; i++)
+                dbList.ForEach((r) =>
                 {
-                    for (int v = 0; v < dbList[i].currencies.Count; v++)
+                    r.currencies.ForEach((c) =>
                     {
-                        if (dbList[i].currencies[v].currency == Base)
+                        if (c.currency == Base)
                         {
-                            baseRate = dbList[i].currencies[v].rate;
+                            baseRate = c.rate;
                         }
-                    }
-                    if (!exo.ContainsKey(dbList[i].date.ToString("yyyy-MM-dd")))
-                        exo.Add(dbList[i].date.ToString("yyyy-MM-dd"), Check(dbList[i], Base, new ExpandoObject(), baseRate, symbols));
-                }
+                    });
+                    if (!exo.ContainsKey(r.date.ToString("yyyy-MM-dd")))
+                        exo.Add(r.date.ToString("yyyy-MM-dd"), Check(r, Base, new ExpandoObject(), baseRate, symbols));
+                });
+
                 return Ok(new { timestamp = Math.Floor((DateTime.Now - Epoch).TotalSeconds), source = Base, rates = exo });
             }
             else
@@ -193,37 +194,39 @@ namespace ExchangeRatesAPI.Controllers
             {
                 if (Base.ToUpper() != cur.currency)
                 {
-                    if (symbolCheck)
+                    if (symbolCheck && !symbolList.Contains(cur.currency) && baseRate != null)
                     {
-                        if (!symbolList.Contains(cur.currency))
-                        {
-                            if(baseRate != null)
-                                ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate / baseRate);
-                            else
-                                ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate);
-                        }
-                    }
-                    else
-                    {
-                        if (baseRate != null)
+                        if (baseRate != 0)
                             ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate / baseRate);
                         else
                             ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate);
-
+                    }
+                    else
+                    {
+                        if (baseRate != 0)
+                            ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate / baseRate);
+                        else
+                            ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate);
                     }
                 }
+                else
+                {
+                    if (baseRate != null || baseRate != 0)
+                        ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate / baseRate);
+                    else
+                        ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate);
+
+                }
             });
-            if(Base.ToUpper() != "EUR")
+
+            if (Base.ToUpper() != "EUR")
             {
                 if (symbolCheck && !symbolList.Contains("EUR"))
-                {
                     ((IDictionary<String, Object>)exo).Add("EUR", baseRate);
-                } 
-                else if(!symbolCheck)
-                {
+                else if (!symbolCheck)
                     ((IDictionary<String, Object>)exo).Add("EUR", baseRate);
-                }
             }
+
             return exo;
         }
     }
