@@ -151,7 +151,7 @@ namespace ExchangeRatesAPI.Controllers
                 decimal baseRate = 0;
                 dbValue.currencies.ForEach((cur) =>
                 {
-                    if (cur.currency == Base)
+                    if (cur.currency == Base.ToUpper())
                     {
                         found = true;
                         baseRate = cur.rate;
@@ -191,7 +191,7 @@ namespace ExchangeRatesAPI.Controllers
 
             dbValue.currencies.ForEach((cur) =>
             {
-                if (Base != cur.currency)
+                if (Base.ToUpper() != cur.currency)
                 {
                     if (symbolCheck)
                     {
@@ -213,7 +213,7 @@ namespace ExchangeRatesAPI.Controllers
                     }
                 }
             });
-            if(Base != "EUR")
+            if(Base.ToUpper() != "EUR")
             {
                 if (symbolCheck && !symbolList.Contains("EUR"))
                 {
