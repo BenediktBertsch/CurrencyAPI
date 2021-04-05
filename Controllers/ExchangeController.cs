@@ -203,7 +203,7 @@ namespace ExchangeRatesAPI.Controllers
                     }
                     else
                     {
-                        if (baseRate != 0)
+                        if (baseRate != null && baseRate != 0)
                             ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate / baseRate);
                         else
                             ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate);
@@ -215,7 +215,6 @@ namespace ExchangeRatesAPI.Controllers
                         ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate / baseRate);
                     else
                         ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate);
-
                 }
             });
 
