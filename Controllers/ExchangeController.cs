@@ -113,14 +113,14 @@ namespace ExchangeRatesAPI.Controllers
         public IActionResult BaseMethodHistory(List<ExchangeRates> dbList, string? Base = "", string? symbols = "")
         {
             var exo = new Dictionary<string, dynamic>();
+            decimal baseRate = 0;
             if (Base != "" && Base != null)
             {
-                decimal baseRate = 0;
                 dbList.ForEach((r) =>
                 {
                     r.currencies.ForEach((c) =>
                     {
-                        if (c.currency == Base)
+                        if (c.currency == Base.ToUpper())
                         {
                             baseRate = c.rate;
                         }
@@ -129,7 +129,7 @@ namespace ExchangeRatesAPI.Controllers
                         exo.Add(r.date.ToString("yyyy-MM-dd"), Check(r, Base, new ExpandoObject(), baseRate, symbols));
                 });
 
-                return Ok(new { timestamp = Math.Floor((DateTime.Now - Epoch).TotalSeconds), source = Base, rates = exo });
+                return Ok(new { timestamp = Math.Floor((DateTime.Now - Epoch).TotalSeconds), source = Base.ToUpper(), rates = exo });
             }
             else
             {
@@ -137,19 +137,19 @@ namespace ExchangeRatesAPI.Controllers
                 for (int i = 0; i < dbList.Count; i++)
                 {
                     if (!exo.ContainsKey(dbList[i].date.ToString("yyyy-MM-dd")))
-                        exo.Add(dbList[i].date.ToString("yyyy-MM-dd"), Check(dbList[i], Base, new ExpandoObject(), null, symbols));
+                        exo.Add(dbList[i].date.ToString("yyyy-MM-dd"), Check(dbList[i], Base, new ExpandoObject(), baseRate, symbols));
                 }
-                return Ok(new { timestamp = Math.Floor((DateTime.Now - Epoch).TotalSeconds), source = Base, rates = exo });
+                return Ok(new { timestamp = Math.Floor((DateTime.Now - Epoch).TotalSeconds), source = Base.ToUpper(), rates = exo });
             }
         }
 
         public IActionResult BaseMethod(ExchangeRates dbValue, string? Base, string? symbols)
         {
             dynamic exo = new ExpandoObject();
+            decimal baseRate = 0;
             if (Base != "")
             {
                 var found = false;
-                decimal baseRate = 0;
                 dbValue.currencies.ForEach((cur) =>
                 {
                     if (cur.currency == Base.ToUpper())
@@ -163,25 +163,26 @@ namespace ExchangeRatesAPI.Controllers
                     return BadRequest();
 
                 exo = Check(dbValue, Base, exo, baseRate, symbols);
-                return Ok(new { timestamp = (dbValue.date - Epoch).TotalSeconds, source = Base, quotes = exo });
+                return Ok(new { timestamp = (dbValue.date - Epoch).TotalSeconds, source = Base.ToUpper(), quotes = exo });
             }
             else
             {
                 Base = "EUR";
-                exo = Check(dbValue, Base, exo, null, symbols);
-                return Ok(new { timestamp = (dbValue.date - Epoch).TotalSeconds, source = Base, quotes = exo });
+                exo = Check(dbValue, Base, exo, baseRate, symbols);
+                return Ok(new { timestamp = (dbValue.date - Epoch).TotalSeconds, source = Base.ToUpper(), quotes = exo });
             }
         }
 
-        public dynamic Check(ExchangeRates dbValue, string Base, dynamic exo, decimal? baseRate, string? symbols)
+        public dynamic Check(ExchangeRates dbValue, string Base, dynamic exo, decimal? baseRate, string? symbols = "")
         {
             var symbolList = new List<string>();
             var symbolCheck = false;
-            if (symbols != null)
+            if (symbols != "")
             {
                 try
                 {
                     symbolList = symbols.Split(',').ToList();
+                    symbolList = symbolList.ConvertAll(s => s.ToUpper());
                     symbolCheck = true;
                 }
                 catch (Exception)
@@ -194,33 +195,26 @@ namespace ExchangeRatesAPI.Controllers
             {
                 if (Base.ToUpper() != cur.currency)
                 {
-                    if (symbolCheck && !symbolList.Contains(cur.currency) && baseRate != null)
+                    if (symbolCheck && symbolList.Contains(cur.currency))
                     {
                         if (baseRate != 0)
                             ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate / baseRate);
                         else
                             ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate);
                     }
-                    else
+                    else if (!symbolCheck)
                     {
-                        if (baseRate != null && baseRate != 0)
+                        if (baseRate != 0)
                             ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate / baseRate);
                         else
                             ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate);
                     }
                 }
-                else
-                {
-                    if (baseRate != null || baseRate != 0)
-                        ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate / baseRate);
-                    else
-                        ((IDictionary<String, Object>)exo).Add(cur.currency, cur.rate);
-                }
             });
 
             if (Base.ToUpper() != "EUR")
             {
-                if (symbolCheck && !symbolList.Contains("EUR"))
+                if (symbolCheck && symbolList.Contains("EUR"))
                     ((IDictionary<String, Object>)exo).Add("EUR", baseRate);
                 else if (!symbolCheck)
                     ((IDictionary<String, Object>)exo).Add("EUR", baseRate);

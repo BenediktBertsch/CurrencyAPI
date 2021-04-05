@@ -25,11 +25,12 @@ namespace ExchangeRatesAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<DataService>();
+
             services.AddControllers();
 
-            Console.WriteLine(Environment.GetEnvironmentVariable("DbString"));
             services.AddDbContext<DatabaseContext>(x => x.UseMySql(Environment.GetEnvironmentVariable("DbString"), new MySqlServerVersion(new Version(8, 0, 21)), mySqlOptions => mySqlOptions
                             .CharSetBehavior(CharSetBehavior.NeverAppend)).EnableSensitiveDataLogging().EnableDetailedErrors());
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "ExchangeRatesAPI", Version = "v1" });
@@ -37,7 +38,7 @@ namespace ExchangeRatesAPI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DataService dbContext)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
