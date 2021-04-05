@@ -158,7 +158,7 @@ namespace ExchangeRatesAPI.Controllers
                     }
                 });
 
-                if (!found)
+                if (!found && Base.ToUpper() != "EUR")
                     return BadRequest();
 
                 exo = Check(dbValue, Base, exo, baseRate, symbols);
