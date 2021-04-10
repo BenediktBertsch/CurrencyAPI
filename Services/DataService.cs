@@ -39,15 +39,15 @@ namespace ExchangeRatesAPI.Services
             try
             {
                 // Check if data older than 90 days exist
-                var check = _dbContext.Rates.FirstOrDefault((v) => v.date <= DateTime.Now.AddDays(-90));
+                var check = _dbContext.Rates.FirstOrDefault((v) => v.date >= DateTime.Now.AddDays(-90));
                 if (check != null)
                 {
                     // Check if data older than 2 days exist
-                    check = _dbContext.Rates.FirstOrDefault((v) => v.date <= DateTime.Now.AddDays(-2));
+                    check = _dbContext.Rates.FirstOrDefault((v) => v.date >= DateTime.Now.AddDays(-2));
                     if(check != null)
                     {
                         // Check if data for today exist
-                        check = _dbContext.Rates.FirstOrDefault((v) => v.date <= DateTime.Now);
+                        check = _dbContext.Rates.FirstOrDefault((v) => v.date >= (DateTime.Now).Date);
                         if(check == null)
                         {
                             Console.WriteLine("Downloading latest data...");
