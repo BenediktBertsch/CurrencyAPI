@@ -215,9 +215,9 @@ namespace ExchangeRatesAPI.Controllers
             if (Base.ToUpper() != "EUR")
             {
                 if (symbolCheck && symbolList.Contains("EUR"))
-                    ((IDictionary<String, Object>)exo).Add("EUR", baseRate);
+                    ((IDictionary<String, Object>)exo).Add("EUR", 1 / baseRate);
                 else if (!symbolCheck)
-                    ((IDictionary<String, Object>)exo).Add("EUR", baseRate);
+                    ((IDictionary<String, Object>)exo).Add("EUR", 1 / baseRate);
             }
 
             return exo;
